@@ -89,9 +89,6 @@ class PostFormTest(TestCase):
 
         self.assertEqual(Post.objects.count(), posts_count + 1)
 
-        debug = Post.objects.filter(id=1)
-        print('HERE', debug)
-
         self.assertTrue(
             'TEMP_MEDIA_ROOT/small.gif'
         )

@@ -43,12 +43,11 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     post_list = author.posts.all()
     page_obj = paging(request, post_list, POSTS_PER_PAGE)
-    following = False
-    if request.user.is_authenticated:
-        following = Follow.objects.filter(
-            user=request.user,
-            author=author
-        ).exists()
+
+    following = request.user.is_authenticated and Follow.objects.filter(
+        user=request.user,
+        author=author
+    ).exists()
 
     context = {
         'author': author,
@@ -145,12 +144,13 @@ def add_comment(request, post_id):
 def follow_index(request):
     """Отображение публикаций подписок."""
 
-    user = Follow.objects.filter(user=request.user).select_related('author')
-    following_list = User.objects.filter(following__in=user)
-    post_list = Post.objects.filter(author__in=following_list).select_related(
+    post_list = Post.objects.filter(
+        author__following__user=request.user
+    ).select_related(
         'author',
         'group',
     )
+
     page_object = paging(request, post_list, POSTS_PER_PAGE)
     context = {
         'page_obj': page_object
@@ -183,7 +183,6 @@ def profile_unfollow(request, username):
 
     user = request.user
     author = get_object_or_404(User, username=username)
-    if Follow.objects.filter(user=user, author=author).exists():
-        Follow.objects.filter(user=user, author=author).delete()
+    Follow.objects.filter(user=user, author=author).delete()
 
     return redirect('posts:profile', username)
